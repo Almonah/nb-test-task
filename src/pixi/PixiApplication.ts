@@ -10,9 +10,6 @@ class PixiApplication extends PIXI.Application {
         super(options);
         this._callbacks = [];
         this.paused = false;
-
-        //@ts-ignore
-        window.app = this;
     }
 
     static createInstance(options: PIXI.IApplicationOptions):PixiApplication {
@@ -20,35 +17,6 @@ class PixiApplication extends PIXI.Application {
             pixiApplication = new PixiApplication(options);
         }
         return pixiApplication;
-    }
-
-    pause() {
-        if (this.paused) {
-            return;
-        }
-        this.paused = true;
-        //gsap.globalTimeline.pause();
-        //this._pausedTweens = [... this._pausedTweens, ...this._pauseAllActiveTweens()];
-        //sound.pause();
-    }
-
-    resume() {
-        if (!this.paused) {
-            return;
-        }
-        this.paused = false;
-        this._callbacks.forEach((callback) => {
-            callback();
-        });
-        this._callbacks.length = 0;
-    }
-
-    proceed(callback: Function) {
-        if (this.paused) {
-            this._callbacks.push(callback);
-        } else {
-            callback();
-        }
     }
 }
 
