@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import PixiApplication from "./pixi/PixiApplication";
 import {game} from "./pixi/components/Game";
 import config from "./config";

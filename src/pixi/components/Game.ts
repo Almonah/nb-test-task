@@ -1,5 +1,4 @@
 import { gsap } from "gsap";
-
 import * as PIXI from "pixi.js";
 import config from "../../config";
 import {Ui} from "./UI";
@@ -27,6 +26,8 @@ class Game extends PIXI.Container {
 
     _bunnySpeed:PIXI.Point;
 
+    _loadingText: PIXI.Text;
+
     constructor() {
         super();
         this._soundOn = false;
@@ -42,6 +43,18 @@ class Game extends PIXI.Container {
         this._hitArea.hitArea = new PIXI.Rectangle(0,0, config.width, config.height);
         this._hitArea.interactive = true;
         this._ui = this.addChild(new Ui());
+
+        this._loadingText = this.addChild(new PIXI.Text('ЗАГРУЗКА', {
+            fill: "#ffffff",
+            fontSize: 100,
+            fontWeight: "bold",
+            align: "left"
+        }));
+
+        this._loadingText.position.set(
+            config.width/2 - this._loadingText.width/2,
+            config.height/2 - 50
+        );
 
         this.interactive = false;
     }
@@ -64,10 +77,12 @@ class Game extends PIXI.Container {
 
         this._floor.init();
 
-        this._bunny = this._downHillContainer.addChild(new PIXI.Sprite(PIXI.Texture.from('/assets/mi_bunny_idle_03.png')));
+        this._bunny = this._downHillContainer.addChild(new PIXI.Sprite(PIXI.Texture.from('./assets/mi_bunny_idle_03.png')));
         this._bunny.scale.set(BUNNY_ORIGINAL_SCALE);
         this._bunny.rotation = BUNNY_ORIGINAL_ROTATION;
         this._bunny.position.set(-80, 400);
+
+        this._loadingText.visible = false;
     }
 
     start = () => {
@@ -84,7 +99,6 @@ class Game extends PIXI.Container {
         this._bunny!.position.set(-80, 400);
         this._ui.showGameEndPopup();
     }
-
 
     activateTap = () => {
         this._hitArea.on('click', this.jump);
