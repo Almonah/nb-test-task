@@ -11,6 +11,7 @@ const BUNNY_ORIGINAL_ROTATION = Math.PI / 30;
 class Game extends PIXI.Container {
     _loader:PIXI.Loader;
     _soundOn:boolean;
+    _started:boolean;
     _paused:boolean;
 
     _bg:Background;
@@ -23,15 +24,20 @@ class Game extends PIXI.Container {
     _hitArea: PIXI.Container;
 
     _bunny?:PIXI.Sprite;
+    _bunnyBounds?: PIXI.Rectangle;
+    _stopperBounds?: PIXI.Rectangle;
 
     _bunnySpeed:PIXI.Point;
 
     _loadingText: PIXI.Text;
 
+    _delayedFinishTween?:gsap.core.Tween;
+
     constructor() {
         super();
         this._soundOn = false;
         this._paused = false;
+        this._started = false;
         this._bunnySpeed = new PIXI.Point(0,0);
         this._loader = new PIXI.Loader();
 
@@ -82,36 +88,47 @@ class Game extends PIXI.Container {
         this._bunny.rotation = BUNNY_ORIGINAL_ROTATION;
         this._bunny.position.set(-80, 400);
 
+        this._bunnyBounds = this._bunny.getLocalBounds();
+        this._bunnyBounds.width = this._bunnyBounds.width * BUNNY_ORIGINAL_SCALE;
+        this._bunnyBounds.height = this._bunnyBounds.height * BUNNY_ORIGINAL_SCALE;
+        this._stopperBounds = this._floor.stopper.getLocalBounds();
+        this._stopperBounds!.width = this._stopperBounds!.width/2 - 50;
+
         this._loadingText.visible = false;
     }
 
     start = () => {
+        this._started = true;
         gsap.ticker.add(this.update);
         gsap.to(this._bunnySpeed, {x: 10, y: .63, onComplete: this.activateTap, duration: 1});
-        gsap.delayedCall(10, this.finish);
+        this._delayedFinishTween = gsap.delayedCall(10, this.finish);
     }
 
     finish = () => {
+        this._delayedFinishTween && this._delayedFinishTween.kill();
+        this._delayedFinishTween = undefined;
+        this._started = false;
         this._jumpTimeline && this._jumpTimeline.kill();
         this._jumpTimeline = undefined;
         gsap.ticker.remove(this.update);
         this.deactivateTap();
         this._bunny!.position.set(-80, 400);
+        this._floor.position.set(0,0);
         this._ui.showGameEndPopup();
     }
 
     activateTap = () => {
-        this._hitArea.on('click', this.jump);
+        this._hitArea.on('pointertap', this.jump);
     }
     deactivateTap = () => {
-        this._hitArea.off('click', this.jump);
+        this._hitArea.off('pointertap', this.jump);
     }
 
     jump = () => {
-        if (this._jumpTimeline) return;
+        if (this._jumpTimeline || !this._started) return;
         this._jumpTimeline = gsap.timeline()
-            .to(this._bunny!.position, {y: this._bunny!.position.y - 150, duration: .5, ease: "power1.out"})
-            .to(this._bunny!.position, {y: this._bunny!.position.y, duration: .4, ease: "power1.in", onComplete: this.jumpComplete})
+            .to(this._bunny!.position, {y: this._bunny!.position.y - 250, duration: .5, ease: "power1.out"})
+            .to(this._bunny!.position, {y: this._bunny!.position.y, duration: .9, ease: "power1.in", onComplete: this.jumpComplete})
         ;
     }
 
@@ -121,6 +138,7 @@ class Game extends PIXI.Container {
     }
 
     update = () => {
+        if (!this._started) return;
         if (this._bunny!.x < 150) {
             this._bunny!.x += this._bunnySpeed.x;
             this._bunny!.y += this._bunnySpeed.y;
@@ -131,15 +149,25 @@ class Game extends PIXI.Container {
                 this._floor.position.set(0,0);
             }
         }
+
+        this._bunnyBounds!.x = this._bunny!.getGlobalPosition().x;
+        this._bunnyBounds!.y = this._bunny!.getGlobalPosition().y;
+        this._stopperBounds!.x = this._floor.stopper!.getGlobalPosition().x + this._stopperBounds!.width/2;
+        this._stopperBounds!.y = this._floor.stopper!.getGlobalPosition().y + 40;
+        if (this._bunnyBounds!.intersects(this._stopperBounds!)) {
+            this.finish();
+        }
     }
 
     pause = () => {
+        if (!this._started) return;
         this._paused = true;
         gsap.ticker.remove(this.update);
         this._jumpTimeline && this._jumpTimeline.pause();
     }
 
     resume = () => {
+        if (!this._started) return;
         this._paused = false;
         gsap.ticker.add(this.update);
         this._jumpTimeline && this._jumpTimeline.resume();

@@ -47,7 +47,7 @@ class TopBar extends PIXI.Container {
             [ButtonState.DISABLED]: "UI/btn_sound_0_active.png"
         }));
         this._soundButtonOff.position.set(config.width - 260, 2);
-        this._soundButtonOff.on('click', this.toggleSound);
+        this._soundButtonOff.on('pointertap', this.toggleSound);
 
         this._soundButtonOn = this.addChild(new Button({
             [ButtonState.UP]: "UI/btn_sound_1_active.png",
@@ -56,7 +56,7 @@ class TopBar extends PIXI.Container {
             [ButtonState.DISABLED]: "UI/btn_sound_1_active.png"
         }));
         this._soundButtonOn.position.set(config.width - 260, 2);
-        this._soundButtonOn.on('click', this.toggleSound);
+        this._soundButtonOn.on('pointertap', this.toggleSound);
 
         this._pauseButton = this.addChild(new Button({
             [ButtonState.UP]: "UI/btn_pause_active.png",
@@ -65,7 +65,7 @@ class TopBar extends PIXI.Container {
             [ButtonState.DISABLED]: "UI/btn_pause_active.png"
         }));
         this._pauseButton.position.set(config.width - 130, 2);
-        this._pauseButton.on('click', this.togglePause);
+        this._pauseButton.on('pointertap', this.togglePause);
 
         this.updateView();
     }
